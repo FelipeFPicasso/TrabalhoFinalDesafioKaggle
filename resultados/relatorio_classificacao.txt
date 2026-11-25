@@ -1,0 +1,78 @@
+===== Baseline (classe majoritária)
+              precision    recall  f1-score   support
+
+       False     0.0000    0.0000    0.0000       858
+        True     0.4944    1.0000    0.6617       839
+
+    accuracy                         0.4944      1697
+   macro avg     0.2472    0.5000    0.3308      1697
+weighted avg     0.2444    0.4944    0.3271      1697
+Matriz de confusão (linhas=real, colunas=previsto):
+[[  0 858]
+ [  0 839]]
+
+===== Regressão Logística
+              precision    recall  f1-score   support
+
+       False     0.7586    0.7436    0.7510       858
+        True     0.7430    0.7580    0.7504       839
+
+    accuracy                         0.7507      1697
+   macro avg     0.7508    0.7508    0.7507      1697
+weighted avg     0.7509    0.7507    0.7507      1697
+Matriz de confusão (linhas=real, colunas=previsto):
+[[638 220]
+ [203 636]]
+
+===== LightGBM (boosting de árvores)
+              precision    recall  f1-score   support
+
+       False     0.7902    0.7855    0.7878       858
+        True     0.7820    0.7867    0.7843       839
+
+    accuracy                         0.7861      1697
+   macro avg     0.7861    0.7861    0.7861      1697
+weighted avg     0.7861    0.7861    0.7861      1697
+Matriz de confusão (linhas=real, colunas=previsto):
+[[674 184]
+ [179 660]]
+
+===== SVM (kernel RBF)
+              precision    recall  f1-score   support
+
+       False     0.7807    0.7844    0.7826       858
+        True     0.7784    0.7747    0.7766       839
+
+    accuracy                         0.7796      1697
+   macro avg     0.7796    0.7796    0.7796      1697
+weighted avg     0.7796    0.7796    0.7796      1697
+Matriz de confusão (linhas=real, colunas=previsto):
+[[673 185]
+ [189 650]]
+
+===== Rede Neural (MLP)
+              precision    recall  f1-score   support
+
+       False     0.7769    0.8240    0.7998       858
+        True     0.8081    0.7580    0.7823       839
+
+    accuracy                         0.7914      1697
+   macro avg     0.7925    0.7910    0.7910      1697
+weighted avg     0.7924    0.7914    0.7911      1697
+Matriz de confusão (linhas=real, colunas=previsto):
+[[707 151]
+ [203 636]]
+
+===== Ensemble (votação suave)
+              precision    recall  f1-score   support
+
+       False     0.7843    0.7925    0.7884       858
+        True     0.7855    0.7771    0.7813       839
+
+    accuracy                         0.7849      1697
+   macro avg     0.7849    0.7848    0.7849      1697
+weighted avg     0.7849    0.7849    0.7849      1697
+Matriz de confusão (linhas=real, colunas=previsto):
+[[680 178]
+ [187 652]]
+

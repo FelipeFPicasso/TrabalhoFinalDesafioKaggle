@@ -1,0 +1,139 @@
+Trabalho Prático — Desafio Kaggle
+Modalidade	Em dupla
+Peso	6,5
+Entrega	Única, até 02/12/2026 (tarefa no Moodle para entrega)
+Entregáveis	Relatório analítico (PDF) + códigos-fonte + vídeo de apresentação (8 a 12 min)
+1. Objetivo
+Aplicar o ciclo completo de aprendizado de máquina a um problema real: entender os dados, prepará-los, treinar modelos, avaliá-los com rigor e comparar técnicas distintas de forma crítica. O foco da avaliação é a qualidade da análise e da comparação, não a posição no ranking do Kaggle.
+
+2. Escolha do desafio
+Escolha um desafio do Kaggle que aceite submissões durante todo o período do trabalho: um desafio do grupo Knowledge em andamento ou um desafio encerrado que aceite submissão tardia (botão Late Submission na página do desafio).
+O desafio deve permitir comparar três técnicas distintas de aprendizado supervisionado, com uma métrica oficial de avaliação. Em caso de dúvida, consulte o professor antes de começar.
+A tabela abaixo traz sugestões, não uma lista fechada. Os desafios sugeridos foram verificados em outubro de 2026; para qualquer outro, confira você mesmo se ainda aceita submissões.
+Não podem ser escolhidos os desafios utilizados como exemplo em aula ou nos materiais de referência da disciplina.
+Submissões tardias não entram no ranking, mas o Kaggle mostra as pontuações pública e privada. Registre as duas no relatório.
+Os dois integrantes devem ter conta no Kaggle e aceitar as regras do desafio. As submissões podem ser feitas por um dos integrantes ou por um time criado no Kaggle.
+Sugestões de desafios
+
+Desafio	Tarefa	Métrica oficial	Situação
+Dados tabulares
+Spaceship Titanic	Classificação binária	Acurácia	Em andamento
+House Prices – Advanced Regression Techniques¹	Regressão	RMSE do logaritmo do preço	Em andamento
+Store Sales – Time Series Forecasting²	Previsão de séries temporais	RMSLE	Em andamento
+Forest Cover Type Prediction	Classificação multiclasse (7 classes)	Acurácia	Submissão tardia
+Bike Sharing Demand²	Regressão (demanda por hora)	RMSLE	Submissão tardia
+Ghouls, Goblins, and Ghosts… Boo!	Classificação multiclasse (3 classes), base pequena	Acurácia	Submissão tardia
+Otto Group Product Classification	Classificação multiclasse (9 classes)	Log loss multiclasse	Submissão tardia
+Give Me Some Credit	Classificação binária desbalanceada	AUC	Submissão tardia
+Bank Churn (Playground S4E1)	Classificação binária	AUC	Submissão tardia
+Obesity Risk (Playground S4E2)	Classificação multiclasse	Acurácia	Submissão tardia
+Abalone (Playground S4E4)	Regressão	RMSLE	Submissão tardia
+Texto
+Natural Language Processing with Disaster Tweets	Classificação binária de textos	F1	Em andamento
+Sentiment Analysis on Movie Reviews	Classificação de sentimento (5 classes)	Acurácia	Submissão tardia
+Spooky Author Identification	Identificação de autoria (3 autores)	Log loss multiclasse	Submissão tardia
+Imagens (GPU recomendada; o Kaggle oferece GPU gratuita nos notebooks)
+Aerial Cactus Identification	Classificação binária, imagens pequenas	AUC	Submissão tardia
+Plant Seedlings Classification	Classificação multiclasse (12 espécies)	F1 micro	Submissão tardia
+Dogs vs. Cats Redux	Classificação binária	Log loss	Submissão tardia
+¹ O desafio Housing Prices Competition for Kaggle Learn Users usa os mesmos dados e a mesma métrica; é tratado como o mesmo desafio.
+² Dados ordenados no tempo: o conjunto de validação deve conter apenas registros posteriores aos de treino. O ideal é reproduzir a forma como o Kaggle separa treino e teste (veja a aba Data do desafio), por exemplo reservando o último período disponível. Se a divisão for aleatória, o modelo aprende com dados do “futuro” para prever o “passado”, e o desempenho na validação fica otimista demais. Para validação cruzada, use TimeSeriesSplit do scikit-learn.
+
+Sugestões mais exigentes: dependem de GPU ou TPU. Nesses desafios, os modelos são grandes demais para treinar em tempo razoável só com CPU. Use a GPU ou TPU gratuita dos notebooks do Kaggle, que tem cota semanal de horas, e planeje os experimentos para caber nela. São code competitions: a submissão é um notebook executado pelo próprio Kaggle.
+
+Petals to the Metal – Flower Classification on TPU (imagens, 104 classes, F1 macro). As três técnicas precisam ser realmente distintas, por exemplo atributos extraídos + SVM, CNN treinada do zero e transferência de aprendizado.
+Contradictory, My Dear Watson (inferência textual multilíngue, acurácia).
+LLM Classification Finetuning (preferência humana entre respostas de LLMs, log loss).
+3. O que deve ser feito
+Análise exploratória dos dados (EDA): atributos, tipos, valores ausentes, distribuições, desbalanceamento e relação com a variável-alvo.
+Preparação dos dados: tratamento de ausentes, codificação, escala, engenharia de atributos, sempre justificados pela EDA e sem vazamento de dados (uso, durante o treino, de informação que não estaria disponível na previsão real, como médias ou escalas calculadas com os dados de validação).
+Protocolo de avaliação único: a mesma divisão treino/validação ou validação cruzada para todas as técnicas, com semente fixa, a métrica oficial do desafio e um baseline simples como referência.
+Pelo menos três tentativas com técnicas distintas, cada uma com pelo menos uma submissão ao Kaggle.
+Técnicas distintas são famílias de modelos diferentes (ex.: modelo linear, árvores e ensembles, k-NN ou SVM, redes neurais) ou abordagens substancialmente diferentes.
+Variar apenas hiperparâmetros do mesmo modelo não conta como técnica distinta. O ajuste de hiperparâmetros deve acontecer dentro de cada tentativa.
+Tentativas extras são bem-vindas, incluindo combinações das anteriores (ensembles, stacking).
+Comparação crítica: tabela e gráfico com treino, validação e pontuação pública do Kaggle de cada técnica, e discussão de por que uma técnica superou as outras (sobreajuste, características dos dados, custo computacional, interpretabilidade).
+Atenção — problemas frequentes em trabalhos anteriores, que custam pontos:
+
+Comparar apenas duas técnicas, ou apresentar variações de hiperparâmetros do mesmo modelo como técnicas diferentes.
+Reportar uma métrica diferente da oficial do desafio (ex.: acurácia quando o desafio avalia log loss; RMSE quando avalia RMSLE).
+Definir a variável-alvo errada (ex.: usar o identificador como alvo) sem perceber, por falta de comparação com um baseline.
+Normalizar, remover outliers ou aplicar SMOTE antes de separar treino e validação (vazamento de dados: informação da validação “vaza” para o treino e o desempenho medido fica otimista demais).
+Nomear a técnica de um jeito e executar outra no código, ou usar um regressor para prever classes sem justificativa.
+Apresentar resultados “simulados” ou não reproduzíveis, e interpretar curvas sem verificar se o eixo mostra erro ou escore.
+Descrever bibliotecas e algoritmos de forma genérica em vez de analisar os próprios resultados.
+4. Entregáveis
+4.1 Relatório analítico (PDF)
+
+Siga o modelo de relatório (disponível no Moodle), que define o conteúdo mínimo e a ordem das seções: identificação, resumo, introdução, dados e EDA, preparação, metodologia, tentativas, comparação e discussão, conclusão, referências e apêndices.
+O relatório é um texto analítico próprio: a exportação do notebook para PDF não substitui o relatório.
+Inclua as figuras mínimas para o tipo de tarefa indicadas no modelo (ex.: matriz de confusão e métricas por classe na classificação; predito × real e resíduos na regressão; curvas de perda por época em redes neurais).
+Extensão de referência: 8 a 15 páginas, sem contar referências e apêndices.
+Inclua no apêndice a captura de tela da página My Submissions com todas as submissões, datas e pontuações.
+Todo número apresentado no relatório deve ser reproduzível pelo código entregue.
+4.2 Códigos-fonte
+
+Notebooks (.ipynb) ou scripts Python, enviados em um arquivo .zip ou por link para repositório no GitHub ou notebooks no Kaggle (acessíveis ao professor).
+Inclua um README com a ordem de execução e as dependências (requirements.txt ou equivalente). Não envie os dados do desafio; indique onde obtê-los.
+O código deve executar do início ao fim e gerar os arquivos de submissão. Use sementes fixas.
+Código de terceiros (notebooks públicos, tutoriais, repositórios) só pode ser usado com citação no código e no relatório, e com a contribuição da dupla claramente identificada.
+4.3 Vídeo de apresentação (8 a 12 minutos)
+
+Os dois integrantes devem aparecer ou falar no vídeo.
+Publique no YouTube como não listado ou no Google Drive com acesso por link, e informe o link no relatório e no envio.
+Roteiro sugerido: problema, métrica e dados (1–2 min); principais achados da EDA e preparação (1–2 min); as tentativas (3–4 min); comparação dos resultados (2–3 min); conclusões e limitações (1 min).
+Apresente resultados e decisões; não leia o código linha a linha.
+5. Forma de entrega
+Apenas um integrante envia por esta tarefa, até 02/12/2026.
+Arquivos: ML_Kaggle_Sobrenome1_Sobrenome2.pdf (relatório) e ML_Kaggle_Sobrenome1_Sobrenome2.zip (código), ou o link do repositório.
+No campo de texto do envio, informe: nomes da dupla, desafio escolhido, link do código e link do vídeo.
+6. Critérios de avaliação
+A nota do trabalho vai de 0 a 10, distribuída conforme a tabela.
+
+Critério	O que se espera	Pontos
+Análise exploratória e preparação	EDA que gera achados concretos; preparação justificada por eles e sem vazamento de dados (transformações ajustadas apenas com os dados de treino).	1,5
+Metodologia experimental	Protocolo único e adequado, métrica oficial, baseline, ajuste de hiperparâmetros sem usar o ranking público.	1,5
+Tentativas	Três ou mais técnicas realmente distintas, bem descritas, justificadas e corretamente implementadas, cada uma submetida ao Kaggle.	2,0
+Comparação e discussão	Tabela e gráfico comparativos; explicação das diferenças de desempenho e da relação treino × validação × Kaggle.	2,0
+Qualidade do relatório	Estrutura do modelo, texto claro, figuras e tabelas legendadas, referências.	1,0
+Códigos-fonte	Organização, comentários, reprodutibilidade e coerência com os resultados relatados.	1,0
+Vídeo	Clareza, domínio do conteúdo pelos dois integrantes, respeito ao tempo.	1,0
+Total	10,0
+A posição no ranking do Kaggle não entra na nota. Uma boa análise de uma técnica que funcionou mal vale mais que uma boa pontuação sem explicação.
+Tentativas sem submissão comprovada, ou que não sejam técnicas distintas, não são contadas no critério “Tentativas”.
+A dupla recebe a mesma nota. O professor pode pedir explicações a qualquer integrante sobre qualquer parte do trabalho.
+Plágio de relatório ou de código, incluindo cópia sem citação de notebooks públicos do Kaggle, resulta em nota zero no trabalho.
+7. Uso de ferramentas de IA generativa
+O uso de assistentes de IA é permitido como apoio (por exemplo, para depurar código ou revisar texto), desde que declarado no Apêndice C do relatório, indicando ferramentas, tarefas e como o resultado foi verificado. A dupla é responsável por tudo o que entrega e deve ser capaz de explicar cada decisão, trecho de código e resultado.
+
+8. Materiais de apoio
+Modelo de relatório (disponível no Moodle) com o conteúdo mínimo de cada seção.
+Artigos de referência sobre comparação de modelos, disponíveis nesta seção do Moodle:
+Multiple Models Comparison (capítulo 10.3 de Do A Data Science Project in 10 Days): comparação de regressão logística, SVM, rede neural, árvore e floresta aleatória com treino, validação e teste do Kaggle.
+Cole, Quickly Test Multiple Models (Towards Data Science): roteiro para treinar vários modelos sob validação cruzada e comparar desempenho e tempo.
+amyrmahdy, Model Comparison: A Step-by-Step Guide to Comparing Several Machine Learning Models (Medium): EDA, preparação e comparação de quatro modelos de regressão por R².
+Kaggle Learn, especialmente os cursos de Intro e Intermediate Machine Learning.
+scikit-learn: armadilhas comuns e boas práticas (vazamento de dados e uso de Pipeline).
+scikit-learn: validação cruzada.
+
+links:
+
+https://scikit-learn.org/stable/modules/cross_validation.html
+
+https://scikit-learn.org/stable/common_pitfalls.html
+
+https://www.kaggle.com/learn
+
+https://www.kaggle.com/competitions/llm-classification-finetuning
+
+https://www.kaggle.com/competitions/contradictory-my-dear-watson
+
+https://www.kaggle.com/competitions/tpu-getting-started
+
+https://www.kaggle.com/competitions
+
+Desafio escolhido:
+
+https://www.kaggle.com/competitions/spaceship-titanic
+
+Spaceship Titanic – Passenger Transportation Prediction

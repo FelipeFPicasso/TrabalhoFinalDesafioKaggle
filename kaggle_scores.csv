@@ -1,0 +1,7 @@
+submissao,kaggle_publico,kaggle_privado,data_submissao
+00_baseline.csv,,,
+01_regressao_logistica.csv,,,
+02_lightgbm.csv,,,
+03_svm.csv,,,
+04_rede_neural.csv,,,
+05_ensemble.csv,,,

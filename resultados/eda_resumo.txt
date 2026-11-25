@@ -1,0 +1,111 @@
+Treino: 8693 linhas x 14 colunas
+Teste:  4277 linhas x 13 colunas
+
+Tipos:
+PassengerId      object
+HomePlanet       object
+CryoSleep        object
+Cabin            object
+Destination      object
+Age             float64
+VIP              object
+RoomService     float64
+FoodCourt       float64
+ShoppingMall    float64
+Spa             float64
+VRDeck          float64
+Name             object
+Transported        bool
+
+Descrição numérica:
+               count    mean      std  min   25%   50%   75%      max
+Age           8514.0   28.83    14.49  0.0  19.0  27.0  38.0     79.0
+RoomService   8512.0  224.69   666.72  0.0   0.0   0.0  47.0  14327.0
+FoodCourt     8510.0  458.08  1611.49  0.0   0.0   0.0  76.0  29813.0
+ShoppingMall  8485.0  173.73   604.70  0.0   0.0   0.0  27.0  23492.0
+Spa           8510.0  311.14  1136.71  0.0   0.0   0.0  59.0  22408.0
+VRDeck        8505.0  304.85  1145.72  0.0   0.0   0.0  46.0  24133.0
+
+Linhas duplicadas (sem PassengerId): 0
+
+Alvo Transported: 4378 True / 4315 False -> 0.5036 de positivos (classes balanceadas)
+
+Valores ausentes (%):
+              treino_%  teste_%
+PassengerId       0.00     0.00
+HomePlanet        2.31     2.03
+CryoSleep         2.50     2.17
+Cabin             2.29     2.34
+Destination       2.09     2.15
+Age               2.06     2.13
+VIP               2.34     2.17
+RoomService       2.08     1.92
+FoodCourt         2.11     2.48
+ShoppingMall      2.39     2.29
+Spa               2.11     2.36
+VRDeck            2.16     1.87
+Name              2.30     2.20
+Linhas com ao menos um ausente: 24.0%; com 2 ou mais: 2.5%
+
+Taxa de Transported por categoria:
+  HomePlanet: Earth=0.42 (n=4602); Europa=0.66 (n=2131); Mars=0.52 (n=1759)
+  CryoSleep: False=0.33 (n=5439); True=0.82 (n=3037)
+  Destination: 55 Cancri e=0.61 (n=1800); PSO J318.5-22=0.50 (n=796); TRAPPIST-1e=0.47 (n=5915)
+  VIP: False=0.51 (n=8291); True=0.38 (n=199)
+  Deck: A=0.50 (n=256); B=0.73 (n=779); C=0.68 (n=747); D=0.43 (n=478); E=0.36 (n=876); F=0.44 (n=2794); G=0.52 (n=2559); T=0.20 (n=5)
+  Side: P=0.45 (n=4206); S=0.56 (n=4288)
+
+Taxa por faixa etária:
+           mean  size
+Age                  
+(-1, 4]   0.768   466
+(4, 12]   0.606   340
+(12, 17]  0.553   739
+(17, 25]  0.458  2351
+(25, 35]  0.483  2105
+(35, 50]  0.486  1776
+(50, 80]  0.484   737
+
+Gastos: % de zeros, assimetria e média por classe
+  RoomService: zeros=65.5%, skew=6.3, max=14327, média False=389, True=63
+  FoodCourt: zeros=64.1%, skew=7.1, max=29813, média False=383, True=533
+  ShoppingMall: zeros=65.8%, skew=12.6, max=23492, média False=168, True=180
+  Spa: zeros=62.6%, skew=7.6, max=22408, média False=564, True=62
+  VRDeck: zeros=64.6%, skew=7.8, max=24133, média False=544, True=69
+  GastoTotal: zeros=42.0%, skew=4.4, max=35987, média False=2004, True=886
+Taxa de Transported com gasto total = 0: 0.786; com gasto > 0: 0.299
+
+Soma dos gastos dos passageiros em CryoSleep: 0
+Soma dos gastos de menores de 13 anos: 0
+CryoSleep ausente e gasto > 0: 119 linhas
+Grupos com mais de um valor de HomePlanet: 0.0%
+Grupos com mais de um valor de Side: 0.0%
+Grupos com mais de um valor de Destination: 11.7%
+Grupos com mais de um valor de Deck: 6.9%
+Grupos em comum entre treino e teste: 0
+Grupos com 2+ pessoas em que todos têm o mesmo alvo: 43.6%
+
+Taxa por tamanho do grupo:
+           mean  size
+TamGrupo             
+1         0.452  4805
+2         0.538  1682
+3         0.593  1020
+4         0.641   412
+5         0.592   265
+6         0.615   174
+7         0.541   231
+8         0.394   104
+
+Correlação com o alvo:
+GastoTotal     -0.469
+Spa            -0.368
+RoomService    -0.363
+VRDeck         -0.343
+ShoppingMall   -0.180
+FoodCourt      -0.136
+Age            -0.075
+CabineNum      -0.045
+VIP            -0.038
+TamGrupo        0.083
+CryoSleep       0.469
