@@ -1,7 +1,7 @@
 submissao,kaggle_publico,kaggle_privado,data_submissao
-00_baseline.csv,,,
-01_regressao_logistica.csv,,,
-02_lightgbm.csv,,,
-03_svm.csv,,,
-04_rede_neural.csv,,,
-05_ensemble.csv,,,
+00_baseline.csv,0.50689,,2026-11-25
+01_regressao_logistica.csv,0.77834,,2026-11-25
+02_lightgbm.csv,0.80640,,2026-11-25
+03_svm.csv,0.79448,,2026-11-25
+04_rede_neural.csv,0.78021,,2026-11-25
+05_ensemble.csv,0.79798,,2026-11-25
