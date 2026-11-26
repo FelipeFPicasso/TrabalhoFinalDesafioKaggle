@@ -3,7 +3,7 @@ title: "Spaceship Titanic: comparação de técnicas de aprendizado supervisiona
 subtitle: "Trabalho Prático — Desafio Kaggle — Aprendizado de Máquina"
 author:
   - "Felipe Picasso"
-  - "[NOME DO(A) 2º INTEGRANTE]"
+  - "[Guilherme Reginato"
 date: "Dezembro de 2026"
 ---
 
@@ -11,7 +11,7 @@ date: "Dezembro de 2026"
 
 | | |
 |---|---|
-| **Integrantes** | Felipe Picasso; [NOME DO(A) 2º INTEGRANTE] |
+| **Integrantes** | Felipe Picasso; Guilherme Reginato |
 | **Desafio** | Spaceship Titanic — <https://www.kaggle.com/competitions/spaceship-titanic> (grupo *Getting Started*, em andamento) |
 | **Tarefa / métrica oficial** | Classificação binária de `Transported` / acurácia |
 | **Código-fonte** | [LINK DO REPOSITÓRIO OU DO ZIP] |
@@ -149,7 +149,24 @@ Prevê sempre `True`: acurácia de 0,506 no treino e 0,494 na validação (a val
 
 **Curvas por época.** Para obter as curvas de perda (Figura 9), a configuração escolhida foi treinada por 300 épocas sem parada antecipada, medindo a *log loss* e a acurácia no treino e na validação. A perda de validação atinge o mínimo na época 32 (0,439) e depois sobe devagar (0,449 na época 300), enquanto a perda de treino continua caindo (0,348 → 0,298) e a acurácia de treino sobe de 0,83 para 0,87. É um sobreajuste típico. A acurácia de validação, porém, fica estável perto de 0,785, porque a perda piora por excesso de confiança nas previsões erradas, não por mais erros. A parada antecipada do modelo escolhido interrompeu o treino na época 63, perto da região ótima.
 
-**Resultado.** Treino 0,838, CV 0,808 ± 0,006 (o menor desvio entre dobras), validação **0,791** [0,771; 0,810] (a maior), AUC 0,877. Ela é a mais assimétrica entre as classes: revocação de 0,824 para `False` e 0,758 para `True`. No teste, prevê apenas 45,6% de `True`, contra 51,9% a 52,4% das outras técnicas e 50,4% no treino. Ou seja, o limiar de 0,5 da MLP está deslocado para `False`. Isso favoreceu a MLP nesta validação, que tem menos positivos (49,4%), e pode prejudicá-la no teste se a proporção lá for próxima de 50%.
+**Resultado.** Treino 0,838, CV 0,808 ± 0,006 (o menor desvio entre dobras), validação **0,791** [0,771; 0,810] (a maior), AUC 0,877. Ela é a mais assimétrica entre as classes: revocação de 0,824 para `False` e 0,758 para `True`. No teste, prevê apenas 45,6% de `True`, contra 51,9% a 52,4% das outras técnicas e 50,4% no treino. Uma hipótese era que o limiar de 0,5 estivesse deslocado para `False`, o que foi testado a seguir.
+
+**Ajuste do limiar de decisão** (`02b_limiar_mlp.py`). Mantendo os hiperparâmetros, testamos limiares de 0,30 a 0,70, em passos de 0,005, sobre as probabilidades fora da dobra da validação cruzada agrupada de 5 dobras, usando apenas o treino. Escolhemos o de maior acurácia. Na linha "CV" da Tabela 1, o limiar aplicado a cada dobra foi escolhido nas outras quatro. A ideia do ajuste surgiu depois de observarmos os resultados na validação e a proporção de `True` prevista no teste. Esses dados não foram usados para escolher o valor do limiar, mas a comparação na validação deve ser lida como uma análise posterior, e não como uma avaliação totalmente independente.
+
+| Medida | Antes (0,500) | Depois (0,505) |
+|:--|--:|--:|
+| Acurácia de treino | 0,8375 | 0,8373 |
+| Acurácia na CV (média ± dp) | 0,8075 ± 0,0064 | 0,8063 ± 0,0046 |
+| Acurácia na validação | 0,7914 | 0,7902 |
+| IC 95% da validação | 0,771–0,810 | 0,770–0,809 |
+| Revocação de `False` | 0,824 | 0,825 |
+| Revocação de `True` | 0,758 | 0,755 |
+| `True` previstos na validação | 46,4% | 46,1% |
+| `True` previstos no teste | 45,6% | 45,3% |
+
+*Tabela 1 — MLP antes e depois do ajuste do limiar de decisão.*
+
+O limiar escolhido, **0,505**, é praticamente o padrão. Os limiares escolhidos para cada dobra variaram de 0,480 a 0,545, em torno de 0,5, e a acurácia na CV não melhorou. Na validação, as duas versões diferem em apenas 4 previsões: só a ajustada acerta 1 e só a original acerta 3 (McNemar exato, p = 0,625). **A hipótese de que um limiar mais adequado corrigiria a baixa proporção de `True` não se confirmou**: o critério de acurácia na CV não indicou a necessidade de reduzir o limiar, e a proporção de `True` no teste caiu ligeiramente. Este experimento não identifica a causa dessa proporção. Como os rótulos do teste não são conhecidos, ela, sozinha, também não demonstra erro do modelo.
 
 ![Figura 8 — Matrizes de confusão de todas as técnicas na validação (1 697 passageiros).](graficos/10_matrizes_confusao.png)
 
@@ -173,7 +190,7 @@ Prevê sempre `True`: acurácia de 0,506 no treino e 0,494 na validação (a val
 
 {{TABELA_COMPARATIVA}}
 
-*Tabela 1 — Resultados de todas as tentativas no mesmo protocolo. Treino: acurácia do modelo escolhido nos 6 996 passageiros de treino. CV: média ± desvio-padrão da acurácia nas 5 dobras agrupadas do treino, para a configuração escolhida. Validação: acurácia nos 1 697 passageiros reservados, com IC 95% por bootstrap. Kaggle público: pontuação do arquivo de submissão (modelo reajustado nos 8 693 passageiros). Ajuste: tempo de um ajuste nos 8 693 passageiros (os tempos de busca estão na Seção 5). Os tempos variam alguns por cento entre execuções; as métricas são idênticas.*
+*Tabela 2 — Resultados de todas as tentativas no mesmo protocolo. Treino: acurácia do modelo escolhido nos 6 996 passageiros de treino. CV: média ± desvio-padrão da acurácia nas 5 dobras agrupadas do treino, para a configuração escolhida. Validação: acurácia nos 1 697 passageiros reservados, com IC 95% por bootstrap. Kaggle público: pontuação do arquivo de submissão (modelo reajustado nos 8 693 passageiros). Ajuste: tempo de um ajuste nos 8 693 passageiros (os tempos de busca estão na Seção 5). Os tempos variam alguns por cento entre execuções; as métricas são idênticas.*
 
 ![Figura 14 — Acurácia (maior é melhor) de treino, validação cruzada, validação e Kaggle público para cada técnica. As barras de erro são o IC 95% da validação, e a linha pontilhada é o baseline.](graficos/20_comparacao.png)
 
@@ -187,15 +204,15 @@ Prevê sempre `True`: acurácia de 0,506 no treino e 0,494 na validação (a val
 
 **Validação cruzada × validação reservada.** Em todas as técnicas, inclusive o baseline, a acurácia na validação reservada ficou de 1,1 a 3,1 pontos abaixo da média da CV. Duas causas se somam. (i) *Viés de seleção*: a média de CV reportada é a da melhor configuração entre 20 a 60 testadas, portanto otimista. Esse efeito é pequeno na LR (poucas configurações quase iguais) e maior nas outras. (ii) *Variação entre partições*: a validação reservada é uma única dobra de 1 697 passageiros e parece ser mais difícil que a média. A queda da LR (3,1 pontos), que quase não tem viés de seleção, indica que (ii) predomina. Por isso as comparações usam sempre a **mesma** partição para todas as técnicas, e diferenças menores que o IC não são interpretadas.
 
-**Validação × Kaggle.** [PREENCHER APÓS AS SUBMISSÕES — exemplo de análise a fazer com os números reais: comparar a coluna "Kaggle público" com "Validação" e "CV". Esperamos pontuações públicas entre a validação e a CV (≈0,78–0,81), porque o modelo final é treinado com 25% mais dados (8 693 contra 6 996), o que, pelas curvas de aprendizado, beneficia sobretudo o LightGBM e o SVM. Se a ordem das técnicas no Kaggle diferir da validação, isso é coerente com o empate estatístico acima: a pontuação pública usa só parte do teste, e diferenças de 0,5 ponto equivalem a poucas dezenas de passageiros. Verificar também se a MLP, que prevê menos `True` (45,6%), perdeu posições no Kaggle, o que confirmaria o deslocamento de limiar discutido na Seção 5.5.]
+**Validação × Kaggle.** [PREENCHER APÓS AS SUBMISSÕES — exemplo de análise a fazer com os números reais: comparar a coluna "Kaggle público" com "Validação" e "CV". Esperamos pontuações públicas entre a validação e a CV (≈0,78–0,81), porque o modelo final é treinado com 25% mais dados (8 693 contra 6 996), o que, pelas curvas de aprendizado, beneficia sobretudo o LightGBM e o SVM. Se a ordem das técnicas no Kaggle diferir da validação, isso é coerente com o empate estatístico acima: a pontuação pública usa só parte do teste, e diferenças de 0,5 ponto equivalem a poucas dezenas de passageiros. Comparar também as notas de `04_rede_neural.csv` e `06_rede_neural_limiar.csv`, sem usá-las para escolher o limiar.]
 
-**Custo computacional e interpretabilidade.** A regressão logística é a mais barata (0,05 s) e a mais interpretável (coeficientes com sinal e magnitude, Figura 11), mas perde cerca de 3 a 4 pontos de acurácia. O LightGBM tem o melhor equilíbrio: entre os melhores em acurácia, a maior AUC (0,885), ajuste em 0,3 s e importâncias de atributos diretas. O SVM empata em acurácia, mas é 30 vezes mais lento para ajustar e prever, escala mal com mais dados e é o menos interpretável. A MLP é rápida para prever, mas sensível à inicialização e ao limiar, e precisa de parada antecipada. O ensemble soma o custo de todos (9,7 s, dominado pelo SVM) sem ganho de acurácia. **Para este problema, recomendaríamos o LightGBM**: ele empata com o melhor resultado, tem o menor custo entre os modelos não lineares, a maior AUC e explicações por atributo.
+**Custo computacional e interpretabilidade.** A regressão logística é a mais barata (0,05 s) e a mais interpretável (coeficientes com sinal e magnitude, Figura 11), mas perde cerca de 3 a 4 pontos de acurácia. O LightGBM tem o melhor equilíbrio: entre os melhores em acurácia, a maior AUC (0,885), ajuste em 0,3 s e importâncias de atributos diretas. O SVM empata em acurácia, mas é 30 vezes mais lento para ajustar e prever, escala mal com mais dados e é o menos interpretável. A MLP é rápida para prever e usa parada antecipada para conter o sobreajuste. O ajuste do limiar não trouxe ganho (Seção 5.5, Tabela 1). O ensemble soma o custo de todos (9,7 s, dominado pelo SVM) sem ganho de acurácia. **Para este problema, recomendaríamos o LightGBM**: ele empata com o melhor resultado, tem o menor custo entre os modelos não lineares, a maior AUC e explicações por atributo.
 
-**Limitações.** (i) A avaliação final usa uma única partição de validação. Uma validação cruzada aninhada completa daria intervalos menores, com um custo cerca de 5 vezes maior. (ii) A busca de hiperparâmetros foi limitada (por exemplo, 60 sorteios no LightGBM) e não testou ajuste do limiar de decisão. (iii) Não usamos o sobrenome (`Name`) para identificar famílias entre grupos, nem os rótulos de outros membros do grupo. Este último exigiria cuidado redobrado com vazamento e não está disponível no teste, cujos grupos são novos.
+**Limitações.** (i) A avaliação final usa uma única partição de validação. Uma validação cruzada aninhada completa daria intervalos menores, com um custo cerca de 5 vezes maior. (ii) A busca de hiperparâmetros foi limitada (por exemplo, 60 sorteios no LightGBM), e o limiar de decisão foi ajustado apenas na MLP. (iii) Não usamos o sobrenome (`Name`) para identificar famílias entre grupos, nem os rótulos de outros membros do grupo. Este último exigiria cuidado redobrado com vazamento e não está disponível no teste, cujos grupos são novos.
 
 # 7. Conclusão
 
-Aplicamos o ciclo completo de aprendizado de máquina ao *Spaceship Titanic*. A EDA guiou a preparação, com regras determinísticas de imputação, transformação log dos gastos e atributos de grupo e de cabine, e também o protocolo, com validação agrupada por grupo de viagem porque o Kaggle separa treino e teste dessa forma. Todas as transformações com parâmetros ficaram dentro de pipelines ajustados só no treino. Com protocolo único, métrica oficial e baseline (0,494), as quatro técnicas distintas e o ensemble atingiram, na validação, 0,751 (Regressão Logística), 0,780 (SVM RBF), 0,785 (Ensemble), 0,786 (LightGBM) e 0,791 (MLP). As técnicas não lineares ficaram estatisticamente empatadas e cerca de 3 a 4 pontos acima do modelo linear, que é limitado pelo viés. As curvas de aprendizado e as distâncias entre treino e validação mostram perfis diferentes: LightGBM e SVM ainda ganhariam com mais dados, e MLP e LightGBM sobreajustam mais. Considerando acurácia, custo e interpretabilidade, o LightGBM é a escolha recomendada. No Kaggle, as submissões obtiveram [PREENCHER]. Como trabalho futuro, sugerimos validação cruzada aninhada, ajuste do limiar de decisão e atributos de família pelo sobrenome.
+Aplicamos o ciclo completo de aprendizado de máquina ao *Spaceship Titanic*. A EDA guiou a preparação, com regras determinísticas de imputação, transformação log dos gastos e atributos de grupo e de cabine, e também o protocolo, com validação agrupada por grupo de viagem porque o Kaggle separa treino e teste dessa forma. Todas as transformações com parâmetros ficaram dentro de pipelines ajustados só no treino. Com protocolo único, métrica oficial e baseline (0,494), as quatro técnicas distintas e o ensemble atingiram, na validação, 0,751 (Regressão Logística), 0,780 (SVM RBF), 0,785 (Ensemble), 0,786 (LightGBM) e 0,791 (MLP). As técnicas não lineares ficaram estatisticamente empatadas e cerca de 3 a 4 pontos acima do modelo linear, que é limitado pelo viés. As curvas de aprendizado e as distâncias entre treino e validação mostram perfis diferentes: LightGBM e SVM ainda ganhariam com mais dados, e MLP e LightGBM sobreajustam mais. Considerando acurácia, custo e interpretabilidade, o LightGBM é a escolha recomendada. No Kaggle, as submissões obtiveram [PREENCHER]. Como trabalho futuro, sugerimos validação cruzada aninhada e atributos de família pelo sobrenome.
 
 # Referências
 
@@ -225,11 +242,11 @@ Aplicamos o ciclo completo de aprendizado de máquina ao *Spaceship Titanic*. A 
 | MLP | camadas ∈ {(32), (64), (128), (64, 32), (128, 64)}; alpha ∈ {10⁻⁴; 10⁻³; 10⁻²; 10⁻¹; 1}; learning_rate_init ∈ {0,001; 0,003}; Adam, ReLU, early stopping (10%, paciência 20) | grade (50) | (64); 0,1; 0,003 |
 | Ensemble | votação suave das 4 técnicas acima, pesos iguais | — | — |
 
-Precisão, revocação e F1 por classe de todas as técnicas, na validação, estão em `resultados/relatorio_classificacao.txt`. As previsões de validação estão em `resultados/predicoes_validacao.csv`, e o teste de McNemar em `resultados/mcnemar_validacao.csv`.
+Precisão, revocação e F1 por classe de todas as técnicas, na validação, estão em `resultados/relatorio_classificacao.txt`. As previsões de validação estão em `resultados/predicoes_validacao.csv`, e o teste de McNemar em `resultados/mcnemar_validacao.csv`. Os resultados do ajuste do limiar estão em `resultados/limiar_mlp.csv` e `resultados/limiar_mlp_mcnemar.csv`.
 
 # Apêndice B — Submissões no Kaggle
 
-[INSERIR AQUI a captura de tela da página *My Submissions* (<https://www.kaggle.com/competitions/spaceship-titanic/submissions>) mostrando os seis arquivos enviados (`00_baseline.csv` … `05_ensemble.csv`), com datas e pontuações.]
+[INSERIR AQUI a captura de tela da página *My Submissions* (<https://www.kaggle.com/competitions/spaceship-titanic/submissions>) mostrando os sete arquivos enviados (`00_baseline.csv` … `06_rede_neural_limiar.csv`), com datas e pontuações.]
 
 # Apêndice C — Uso de ferramentas de IA generativa
 
