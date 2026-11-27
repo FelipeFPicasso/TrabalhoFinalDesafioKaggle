@@ -1,9 +1,3 @@
-"""Treina e compara as técnicas sob o mesmo protocolo e gera as submissões do Kaggle.
-
-Protocolo: uma partição treino/validação agrupada por grupo de viagem (semente fixa) e,
-dentro do treino, CV agrupada de 5 dobras para ajustar os hiperparâmetros.
-A validação só é usada uma vez por técnica, depois do ajuste.
-"""
 import time
 import warnings
 
@@ -31,10 +25,8 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 sns.set_theme(style="whitegrid", context="notebook")
 np.random.seed(SEED)
 
-# ---------------------------------------------------------------- dados e partição
 treino, teste, X, y, grupos, X_teste = preparar_dados()
 
-# Partição treino/validação: a mesma em todos os scripts (mesma semente)
 idx_tr, idx_val = next(validacao_agrupada().split(X, y, grupos))
 X_tr, y_tr, g_tr = X.iloc[idx_tr], y.iloc[idx_tr], grupos[idx_tr]
 X_val, y_val = X.iloc[idx_val], y.iloc[idx_val]
@@ -42,10 +34,8 @@ assert not set(g_tr) & set(grupos[idx_val]), "grupo dividido entre treino e vali
 print(f"Treino: {len(idx_tr)} | Validação: {len(idx_val)} | Teste Kaggle: {len(X_teste)}")
 print(f"Taxa de positivos -> treino {y_tr.mean():.3f}, validação {y_val.mean():.3f}")
 
-cv_interna = validacao_agrupada()  # CV usada na busca de hiperparâmetros
+cv_interna = validacao_agrupada()
 
-# ---------------------------------------------------------------- técnicas e grades
-# (nome, pipeline, grade de hiperparâmetros, tipo de busca)
 TECNICAS = [
     (BASELINE, pipe(novo_classificador(BASELINE)), {}, "grade"),
     (LR, pipe(novo_classificador(LR)),
@@ -72,13 +62,11 @@ resultados, melhores, buscas, prob_val, pred_val = [], {}, {}, {}, {}
 
 
 def avaliar(nome, modelo_tr, tempo_busca, cv_media, cv_dp, params):
-    """Avalia um modelo ajustado só no treino, refaz o ajuste com tudo e grava a submissão."""
     pv = modelo_tr.predict(X_val)
     pred_val[nome] = pv
     prob = None
     if hasattr(modelo_tr, "predict_proba") and not nome.startswith("Baseline"):
         prob_val[nome] = prob = modelo_tr.predict_proba(X_val)[:, 1]
-    # Submissão: mesmos hiperparâmetros, mas treinando em treino + validação
     final = clone(modelo_tr)
     t0 = time.perf_counter(); final.fit(X, y); t_fit = time.perf_counter() - t0
     t0 = time.perf_counter(); pt = final.predict(X_teste); t_pred = time.perf_counter() - t0
@@ -93,7 +81,6 @@ def avaliar(nome, modelo_tr, tempo_busca, cv_media, cv_dp, params):
     return final
 
 
-# ---------------------------------------------------------------- busca de hiperparâmetros
 for nome, est, grade, tipo in TECNICAS:
     print(f"\n=== {nome}")
     if tipo == "aleatoria":
@@ -109,13 +96,12 @@ for nome, est, grade, tipo in TECNICAS:
     cv_m, cv_s = busca.cv_results_["mean_test_score"][i], busca.cv_results_["std_test_score"][i]
     print(f"  melhores hiperparâmetros: {busca.best_params_}  ({t_busca:.1f}s de busca)")
     modelo = busca.best_estimator_
-    if nome.startswith("SVM"):  # probabilidades só são necessárias para AUC e ensemble
+    if nome.startswith("SVM"):
         modelo = clone(modelo).set_params(clf__probability=True).fit(X_tr, y_tr)
     melhores[nome] = modelo
     buscas[nome] = busca
     avaliar(nome, modelo, t_busca, cv_m, cv_s, busca.best_params_)
 
-# ---------------------------------------------------------------- ensemble por votação suave
 nome = ENSEMBLE
 print(f"\n=== {nome}")
 membros = [(slug(n), clone(m)) for n, m in melhores.items() if not n.startswith("Baseline")]
@@ -128,13 +114,11 @@ melhores[nome] = ens
 avaliar(nome, ens, t_ens, cv_ens.mean(), cv_ens.std(), {"membros": [m for m, _ in membros],
                                                         "pesos": "iguais"})
 
-# ---------------------------------------------------------------- tabela de resultados
 res = pd.DataFrame(resultados)
 res.to_csv(RESULTADOS / "resultados.csv", index=False)
 print("\n" + res[["tecnica", "acc_treino", "acc_cv_media", "acc_validacao", "auc_validacao",
                   "tempo_busca_s", "tempo_ajuste_final_s"]].round(4).to_string(index=False))
 
-# Precisão, recall e matriz de confusão de cada técnica
 with open(RESULTADOS / "relatorio_classificacao.txt", "w", encoding="utf-8") as f:
     for n, pv in pred_val.items():
         f.write(f"===== {n}\n")
@@ -143,7 +127,6 @@ with open(RESULTADOS / "relatorio_classificacao.txt", "w", encoding="utf-8") as 
         f.write(f"Matriz de confusão (linhas=real, colunas=previsto):\n"
                 f"{confusion_matrix(y_val, pv)}\n\n")
 
-# McNemar: a melhor técnica contra cada uma das outras (mesmas amostras de validação)
 melhor = res.loc[res.acc_validacao.idxmax(), "tecnica"]
 linhas_mc = []
 for n, pv in pred_val.items():
@@ -157,8 +140,6 @@ print("\nMcNemar:\n" + pd.DataFrame(linhas_mc).round(4).to_string(index=False))
 
 nomes_mod = [n for n in pred_val if not n.startswith("Baseline")]
 
-# ---------------------------------------------------------------- figuras
-# Fig. 10: matrizes de confusão
 fig, axes = plt.subplots(2, 3, figsize=(13, 8))
 for ax, n in zip(axes.ravel(), pred_val):
     cm = confusion_matrix(y_val, pred_val[n])
@@ -169,7 +150,6 @@ for ax, n in zip(axes.ravel(), pred_val):
 fig.suptitle(f"Matrizes de confusão na validação (n = {len(y_val)})")
 fig.tight_layout(); fig.savefig(GRAFICOS / "10_matrizes_confusao.png", dpi=150); plt.close(fig)
 
-# Fig. 11: curvas ROC
 fig, ax = plt.subplots(figsize=(6, 5.5))
 for n in nomes_mod:
     fpr, tpr, _ = roc_curve(y_val, prob_val[n])
@@ -179,7 +159,6 @@ ax.set_xlabel("Taxa de falsos positivos"); ax.set_ylabel("Taxa de verdadeiros po
 ax.set_title("Curvas ROC na validação"); ax.legend(fontsize=8, loc="lower right")
 fig.tight_layout(); fig.savefig(GRAFICOS / "11_roc.png", dpi=150); plt.close(fig)
 
-# Fig. 12: resultado da busca de hiperparâmetros (RL, SVM e MLP)
 cvr = lambda n: pd.DataFrame(buscas[n].cv_results_)
 fig, axes = plt.subplots(1, 3, figsize=(17, 4.6))
 d = cvr(LR)
@@ -207,7 +186,6 @@ axes[2].set_ylabel("Camadas ocultas")
 fig.tight_layout(); fig.savefig(GRAFICOS / "12_busca_hiperparametros.png", dpi=150)
 plt.close(fig)
 
-# Fig. 13: LightGBM (sobreajuste entre as 60 configurações + importância por ganho)
 d = cvr(LGBM)
 fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
 sc = axes[0].scatter(d.mean_train_score, d.mean_test_score,
@@ -224,7 +202,6 @@ axes[1].set_xlabel("Fração do ganho total"); axes[1].set_title("LightGBM: 15 a
 fig.tight_layout(); fig.savefig(GRAFICOS / "13_lightgbm.png", dpi=150); plt.close(fig)
 imp.to_csv(RESULTADOS / "lightgbm_importancia.csv")
 
-# Fig. 14: coeficientes da regressão logística
 lr = melhores[LR]
 coef = pd.Series(lr.named_steps["clf"].coef_[0],
                  index=lr.named_steps["prep"].get_feature_names_out())
@@ -237,7 +214,6 @@ ax.set_xlabel("Coeficiente (log-odds de Transported por desvio-padrão / categor
 ax.set_title("Regressão Logística: 18 maiores coeficientes em módulo")
 fig.tight_layout(); fig.savefig(GRAFICOS / "14_lr_coeficientes.png", dpi=150); plt.close(fig)
 
-# Fig. 15: curvas por época da MLP (treino manual com partial_fit, só para o gráfico)
 mlp_best = melhores[MLP]
 prep = clone(mlp_best.named_steps["prep"]).fit(X_tr)
 Xt_tr, Xt_val = prep.transform(X_tr), prep.transform(X_val)
@@ -252,7 +228,7 @@ for ep in range(1, 301):
                      acc_treino=accuracy_score(y_tr, mlp.predict(Xt_tr)),
                      acc_validacao=accuracy_score(y_val, mlp.predict(Xt_val))))
 hist = pd.DataFrame(hist); hist.to_csv(RESULTADOS / "mlp_historico.csv", index=False)
-ep_es = mlp_best.named_steps["clf"].n_iter_  # época em que a parada antecipada encerrou
+ep_es = mlp_best.named_steps["clf"].n_iter_
 fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
 axes[0].plot(hist.epoca, hist.perda_treino, label="Treino")
 axes[0].plot(hist.epoca, hist.perda_validacao, label="Validação")
@@ -266,7 +242,6 @@ for ax in axes:
 fig.suptitle(f"MLP {p['hidden_layer_sizes']}, alpha={p['alpha']}: curvas por época")
 fig.tight_layout(); fig.savefig(GRAFICOS / "15_mlp_curvas.png", dpi=150); plt.close(fig)
 
-# Fig. 16: curvas de aprendizado (acurácia x tamanho do treino) dos quatro modelos
 fig, axes = plt.subplots(1, 4, figsize=(18, 4), sharey=True)
 curvas = []
 for ax, n in zip(axes, [k for k in nomes_mod if not k.startswith("Ensemble")]):
@@ -288,7 +263,6 @@ fig.suptitle("Curvas de aprendizado (CV agrupada de 5 dobras na parte de treino)
 fig.tight_layout(); fig.savefig(GRAFICOS / "16_curvas_aprendizado.png", dpi=150); plt.close(fig)
 pd.DataFrame(curvas).to_csv(RESULTADOS / "curvas_aprendizado.csv", index=False)
 
-# Previsões da validação (para conferir ou refazer análises depois)
 pd.DataFrame({"PassengerId": treino.PassengerId.iloc[idx_val].values, "real": y_val.values,
               **{n: v for n, v in pred_val.items()}}) \
     .to_csv(RESULTADOS / "predicoes_validacao.csv", index=False)

@@ -1,9 +1,3 @@
-"""Ablação do atributo de família (sobrenome): ele melhora os modelos?
-
-Compara cada técnica COM e SEM o atributo TamFamilia, com os mesmos hiperparâmetros
-(os de resultados/), as mesmas dobras e a mesma validação. A decisão de adotar ou não o
-atributo é da dupla: este script só mede. Rode depois do 02 e do 02b.
-"""
 import warnings
 
 import matplotlib
@@ -24,15 +18,14 @@ sns.set_theme(style="whitegrid", context="notebook")
 np.random.seed(SEED)
 
 salvos = hiperparametros_salvos()
-tecnicas = [n for n in BASES + [KNN] if n in salvos]  # o k-NN só entra se o 02b já rodou
+tecnicas = [n for n in BASES + [KNN] if n in salvos]
 
-# Dois conjuntos de dados: sem e com o atributo (mesmas linhas, mesma ordem)
 conjuntos = {}
 for usar in (False, True):
     _, _, X, y, grupos, _ = preparar_dados(usar_familia=usar)
     conjuntos[usar] = (X, y, grupos)
 X0, y0, g0 = conjuntos[False]
-idx_tr, idx_val = next(validacao_agrupada().split(X0, y0, g0))  # mesma partição do 02
+idx_tr, idx_val = next(validacao_agrupada().split(X0, y0, g0))
 cv_interna = validacao_agrupada()
 
 linhas, difs_dobras = [], {}
@@ -40,13 +33,13 @@ for nome in tecnicas:
     print(f"=== {nome}")
     cv, val = {}, {}
     for usar, (X, y, g) in conjuntos.items():
-        est = reconstruir(nome, salvos[nome])  # SVM sem probability: só precisa de predict
+        est = reconstruir(nome, salvos[nome])
         X_tr, y_tr, g_tr = X.iloc[idx_tr], y.iloc[idx_tr], g[idx_tr]
         cv[usar] = cross_val_score(est, X_tr, y_tr, groups=g_tr, cv=cv_interna,
                                    scoring="accuracy", n_jobs=-1)
         est.fit(X_tr, y_tr)
         val[usar] = accuracy_score(y.iloc[idx_val], est.predict(X.iloc[idx_val]))
-    dif = cv[True] - cv[False]  # diferença dobra a dobra (mesmas dobras nos dois casos)
+    dif = cv[True] - cv[False]
     difs_dobras[nome] = dif
     linhas.append(dict(tecnica=nome, cv_sem=cv[False].mean(), cv_com=cv[True].mean(),
                        dif_cv_media=dif.mean(), dif_cv_dp=dif.std(),
@@ -60,7 +53,6 @@ tab = pd.DataFrame(linhas)
 tab.to_csv(RESULTADOS / "ablacao_familia.csv", index=False)
 print("\n" + tab.round(4).to_string(index=False))
 
-# Fig. 19: diferença por dobra (com - sem) para cada técnica
 fig, ax = plt.subplots(figsize=(8, 4.3))
 for i, (nome, dif) in enumerate(difs_dobras.items()):
     ax.scatter(np.full(len(dif), i), dif, color="#2a6fbb", alpha=0.6, zorder=3)

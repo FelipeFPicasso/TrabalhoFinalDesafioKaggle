@@ -1,4 +1,3 @@
-"""Definição dos classificadores e reconstrução dos modelos a partir dos hiperparâmetros salvos."""
 import json
 
 import pandas as pd
@@ -12,7 +11,6 @@ from sklearn.svm import SVC
 
 from src.preparacao import RESULTADOS, SEED, preprocessador
 
-# Nomes das técnicas (são as chaves usadas nos CSVs de resultados)
 BASELINE = "Baseline (classe majoritária)"
 LR = "Regressão Logística"
 LGBM = "LightGBM (boosting de árvores)"
@@ -23,11 +21,10 @@ KNN = "k-NN (vizinhos mais próximos)"
 MLP_LIMIAR = "MLP + limiar ajustado"
 STACKING = "Stacking (regressão logística)"
 
-BASES = [LR, LGBM, SVM, MLP]  # os quatro modelos que entram nos ensembles
+BASES = [LR, LGBM, SVM, MLP]
 
 
 def novo_classificador(tecnica):
-    """Classificador de cada técnica, com os parâmetros fixos do projeto."""
     if tecnica == BASELINE:
         return DummyClassifier(strategy="most_frequent")
     if tecnica == LR:
@@ -45,12 +42,10 @@ def novo_classificador(tecnica):
 
 
 def pipe(modelo):
-    """Pré-processamento + modelo no mesmo Pipeline (evita vazamento de dados)."""
     return Pipeline([("prep", preprocessador()), ("clf", modelo)])
 
 
 def hiperparametros_salvos():
-    """Lê os melhores hiperparâmetros de resultados.csv (e de resultados_extras.csv, se existir)."""
     saidas = {}
     for nome_arq in ("resultados.csv", "resultados_extras.csv"):
         arq = RESULTADOS / nome_arq
@@ -61,9 +56,8 @@ def hiperparametros_salvos():
 
 
 def reconstruir(tecnica, params):
-    """Recria o Pipeline de uma técnica com os hiperparâmetros já encontrados (sem treinar)."""
     est = pipe(novo_classificador(tecnica))
     p = dict(params)
-    if "clf__hidden_layer_sizes" in p:  # no JSON a tupla vira lista
+    if "clf__hidden_layer_sizes" in p:
         p["clf__hidden_layer_sizes"] = tuple(p["clf__hidden_layer_sizes"])
     return est.set_params(**p)

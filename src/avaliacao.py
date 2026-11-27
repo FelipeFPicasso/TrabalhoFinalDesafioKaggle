@@ -1,4 +1,3 @@
-"""Funções de avaliação usadas por mais de um script (linha de resultados, McNemar, slug)."""
 import json
 
 import numpy as np
@@ -10,7 +9,6 @@ from src.preparacao import SEED
 
 
 def slug(nome):
-    """Nome da técnica -> trecho usado no nome do arquivo de submissão."""
     s = nome.lower().split(" (")[0] if not nome.startswith("Baseline") else "baseline"
     for a, b in [("ã", "a"), ("í", "i"), ("é", "e"), (" ", "_")]:
         s = s.replace(a, b)
@@ -19,11 +17,9 @@ def slug(nome):
 
 def linha_resultado(nome, arquivo, ids_teste, y_tr, pred_tr, y_val, pred_val, prob_val,
                     cv_media, cv_dp, tempo_busca, t_fit, t_pred, pred_teste, params):
-    """Calcula as métricas da validação, grava a submissão e devolve a linha de resultados."""
     acc_tr = accuracy_score(y_tr, pred_tr)
     acc_val = accuracy_score(y_val, pred_val)
     auc_val = roc_auc_score(y_val, prob_val) if prob_val is not None else np.nan
-    # IC 95% por bootstrap dos acertos na validação
     rng = np.random.default_rng(SEED)
     acertos = (np.asarray(pred_val) == np.asarray(y_val)).astype(float)
     boot = [acertos[rng.integers(0, len(acertos), len(acertos))].mean() for _ in range(2000)]
@@ -38,8 +34,7 @@ def linha_resultado(nome, arquivo, ids_teste, y_tr, pred_tr, y_val, pred_val, pr
 
 
 def mcnemar_exato(acerta_a, acerta_b):
-    """Teste de McNemar exato (binomial) entre dois vetores booleanos de acerto."""
-    n01 = int(np.sum(acerta_a & ~acerta_b))   # só A acerta
-    n10 = int(np.sum(~acerta_a & acerta_b))   # só B acerta
+    n01 = int(np.sum(acerta_a & ~acerta_b))
+    n10 = int(np.sum(~acerta_a & acerta_b))
     p = binomtest(n01, n01 + n10, 0.5).pvalue if n01 + n10 else 1.0
     return n01, n10, p

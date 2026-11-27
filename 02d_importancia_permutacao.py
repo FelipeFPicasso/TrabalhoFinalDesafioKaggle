@@ -1,10 +1,3 @@
-"""Importância por permutação: o quanto cada grupo de atributos pesa em cada modelo.
-
-Embaralha um grupo de atributos por vez na validação e mede a queda da acurácia (métrica
-oficial). Os modelos são os mesmos do 02 (ajustados só no treino), então dá para comparar
-as técnicas entre si, o que a importância por ganho do LightGBM e os coeficientes da
-regressão logística não permitem. Rode depois do 02 e do 02b.
-"""
 import warnings
 
 import matplotlib
@@ -25,10 +18,9 @@ sns.set_theme(style="whitegrid", context="notebook")
 N_REPETICOES = 20
 
 _, _, X, y, grupos, _ = preparar_dados()
-idx_tr, idx_val = next(validacao_agrupada().split(X, y, grupos))  # mesma partição do 02
+idx_tr, idx_val = next(validacao_agrupada().split(X, y, grupos))
 X_tr, y_tr, X_val, y_val = X.iloc[idx_tr], y.iloc[idx_tr], X.iloc[idx_val], y.iloc[idx_val]
 
-# Atributos correlacionados são embaralhados juntos (senão o modelo "se vira" com o irmão)
 GRUPOS_ATRIBUTOS = {
     "Gastos a bordo": [f"{g}_log" for g in GASTOS] + ["GastoTotal_log", "SemGasto"],
     "CryoSleep": ["CryoSleep"],
@@ -49,7 +41,6 @@ for n in [n for n in BASES + [KNN] if n in salvos]:
 
 
 def queda_por_permutacao(modelo, colunas, rng):
-    """Queda de acurácia ao embaralhar as linhas das colunas (todas com a mesma permutação)."""
     base = accuracy_score(y_val, modelo.predict(X_val))
     quedas = []
     for _ in range(N_REPETICOES):
@@ -73,16 +64,14 @@ for nome, modelo in modelos.items():
 imp = pd.DataFrame(linhas)
 imp.to_csv(RESULTADOS / "importancia_permutacao.csv", index=False)
 
-# Tabela grupos x modelos e concordância entre modelos (correlação de Spearman)
 larga = imp.pivot(index="grupo", columns="modelo", values="queda_media")[list(modelos)]
 larga = larga.loc[larga.mean(axis=1).sort_values(ascending=False).index]
 sp = larga.corr(method="spearman")
 sp.to_csv(RESULTADOS / "importancia_permutacao_spearman.csv")
 print("\nConcordância entre modelos (Spearman):\n" + sp.round(2).to_string())
 
-# Fig. 18: mapa de calor (queda de acurácia em pontos percentuais)
 fig, ax = plt.subplots(figsize=(9.5, 5))
-rotulos = [n.split(" (")[0].replace(" ", "\n", 1) for n in larga.columns]  # quebra o nome em 2 linhas
+rotulos = [n.split(" (")[0].replace(" ", "\n", 1) for n in larga.columns]
 sns.heatmap(larga * 100, annot=True, fmt=".1f", cmap="Blues", ax=ax,
             xticklabels=rotulos, cbar_kws={"label": "Queda de acurácia (p.p.)"})
 ax.set_ylabel(""); ax.set_xlabel("")

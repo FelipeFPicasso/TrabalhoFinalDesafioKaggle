@@ -304,6 +304,27 @@ Precisão, revocação e F1 por classe de todas as técnicas do `02_modelos.py`,
 
 ![Figura B1 — Página *My Submissions* do desafio (<https://www.kaggle.com/competitions/spaceship-titanic/submissions>) com as nove submissões (`00_baseline.csv` … `08_stacking.csv`), enviadas em 27/11/2026, e suas pontuações públicas. O desafio está em andamento e não divulga pontuação privada.](relatorio/kaggle_my_submissions.png){width=85%}
 
-# Apêndice C — Uso de ferramentas de IA generativa
+# Apêndice C — Contribuições e uso de ferramentas de IA generativa
 
-[REVISAR E AJUSTAR para refletir o uso real.] Foram usados assistentes de IA da Anthropic como apoio, em duas etapas. (1) O **Claude Code** na escrita dos scripts Python do pipeline original (estrutura do pipeline, figuras e geração do relatório) e numa primeira versão deste texto, a partir das instruções do trabalho. [CONFERIR se foi isso mesmo.] (2) O **Claude (conversa no claude.ai)** na revisão do projeto e na implementação das melhorias: tentativas extras (k-NN, limiar da MLP e *stacking*), ablação do atributo de família, importância por permutação, notebook da EDA, comentários no código e redação das seções correspondentes deste relatório. A dupla verificou o resultado da seguinte forma: executou todos os scripts em sequência com os dados reais do Kaggle, sem erros; [DESCREVER o que a dupla de fato fez além disso — por exemplo: conferiu que cada número das tabelas e do texto coincide com `resultados/`; leu o código de cada etapa e verificou a ausência de vazamento; conferiu as figuras; submeteu os arquivos ao Kaggle]. Nenhum notebook público do Kaggle nem código de terceiros foi copiado; as bibliotecas usadas estão citadas nas referências.
+**Felipe Picasso.**
+
+- Escolheu o desafio e preparou o ambiente.
+- Escreveu a primeira versão do pipeline, com o apoio do **Claude Code** (Anthropic): análise exploratória (`01_eda.py`), preparação dos dados (`src/preparacao.py`), baseline, Regressão Logística, LightGBM, SVM, MLP e ensemble por votação (`02_modelos.py`), comparação (`03_comparacao.py`) e montagem do relatório (`04_relatorio.py`), além da primeira versão deste texto.
+- Fez as primeiras submissões (00 a 05) em 25/11/2026 e escreveu a primeira análise "Validação × Kaggle".
+- Em 27/11/2026, integrou o trabalho dos dois e reenviou as nove submissões numa só conta para o Apêndice B. Nessa etapa usou de novo o Claude Code para revisar a branch do colega, reproduzir o pipeline completo, resolver os conflitos de integração, reescrever a análise do Kaggle para as nove submissões e remover um script duplicado.
+
+**Guilherme Reginato.**
+
+- Implementou as tentativas extras com o apoio do **Claude** (conversa no claude.ai): k-NN, MLP com limiar de decisão ajustado e *stacking* (`02b_tentativas_extras.py`).
+- Fez a ablação do atributo de família (`02c_ablacao_familia.py`, achado A9) e a importância por permutação (`02d_importancia_permutacao.py`).
+- Criou o notebook da EDA (`01_eda.ipynb`) e reorganizou o código em `src/modelos.py` e `src/avaliacao.py`, com comentários e README.
+- Fez as submissões 06 a 08 e redigiu as Seções 5.6, 5.8, 5.9 e a parte correspondente da Seção 6.
+
+**Como o resultado foi verificado.**
+
+- O `run_all.sh` foi executado do início ao fim com os dados reais do Kaggle, sem erros. As dez submissões geradas foram idênticas byte a byte às versionadas no repositório, e as métricas de treino, CV, validação e AUC coincidiram com as de `resultados/`.
+- No reenvio de 27/11/2026, as nove pontuações públicas do Kaggle foram exatamente as mesmas das submissões originais.
+- O código de preparação e das tentativas extras foi revisado para confirmar que toda transformação com parâmetros fica dentro do `Pipeline` e que o limiar da MLP e o meta-modelo do *stacking* usam só probabilidades fora da dobra do treino.
+- Os dois integrantes leram o relatório final e são responsáveis por todo o conteúdo entregue.
+
+Nenhum notebook público do Kaggle nem código de terceiros foi copiado; as bibliotecas usadas estão citadas nas referências.

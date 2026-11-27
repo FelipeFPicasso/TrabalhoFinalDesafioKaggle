@@ -52,8 +52,7 @@ para o Kaggle, as figuras, as tabelas comparativas e (à parte) o relatório.
 
 `01_eda.ipynb` tem a mesma análise de `01_eda.py`, em células, para apresentar no vídeo. Para abrir:
 `pip install notebook` e `jupyter notebook` na pasta do projeto (precisa ser dela para achar `src/`),
-depois *Run All*. O `01_eda.py` é a fonte: para regenerar o notebook, `pip install jupytext` e
-`jupytext --to ipynb 01_eda.py`.
+depois *Run All*.
 
 ## Atributo de família (opcional)
 
