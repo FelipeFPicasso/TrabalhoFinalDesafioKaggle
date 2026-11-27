@@ -302,7 +302,7 @@ Precisão, revocação e F1 por classe de todas as técnicas do `02_modelos.py`,
 
 # Apêndice B — Submissões no Kaggle
 
-![Figura B1 — Página *My Submissions* do desafio (<https://www.kaggle.com/competitions/spaceship-titanic/submissions>) com as nove submissões (`00_baseline.csv` … `08_stacking.csv`), suas datas e pontuações públicas. O desafio está em andamento e não divulga pontuação privada.](relatorio/kaggle_my_submissions.png){width=85%}
+![Figura B1 — Página *My Submissions* do desafio (<https://www.kaggle.com/competitions/spaceship-titanic/submissions>) com as nove submissões (`00_baseline.csv` … `08_stacking.csv`), enviadas em 27/11/2026, e suas pontuações públicas. O desafio está em andamento e não divulga pontuação privada.](relatorio/kaggle_my_submissions.png){width=85%}
 
 # Apêndice C — Uso de ferramentas de IA generativa
 
