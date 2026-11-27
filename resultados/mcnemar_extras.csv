@@ -1,0 +1,5 @@
+comparacao,so_primeiro_acerta,so_segundo_acerta,p_valor
+MLP + limiar ajustado vs Rede Neural (MLP),11,25,0.028816719655878845
+Stacking (regressão logística) vs Ensemble (votação suave),76,64,0.35258382707227787
+k-NN (vizinhos mais próximos) vs Rede Neural (MLP),69,112,0.0017205727294943697
+Stacking (regressão logística) vs Rede Neural (MLP),65,64,1.0

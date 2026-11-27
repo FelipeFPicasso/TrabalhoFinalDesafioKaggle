@@ -1,0 +1,6 @@
+,coeficiente
+Regressão Logística,-0.36487288990198713
+LightGBM (boosting de árvores),4.7880084365655895
+SVM (kernel RBF),-0.5568723553786643
+Rede Neural (MLP),1.9598299974769862
+(intercepto),-2.8657587982330996

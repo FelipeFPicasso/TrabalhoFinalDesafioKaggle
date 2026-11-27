@@ -1,6 +1,6 @@
 comparacao,so_melhor_acerta,so_outro_acerta,p_valor
-Rede Neural (MLP) vs Baseline (classe majoritária),707,203,6.001565679236166e-66
-Rede Neural (MLP) vs Regressão Logística,150,81,6.613226227903767e-06
+Rede Neural (MLP) vs Baseline (classe majoritária),707,203,6.001565679236192e-66
+Rede Neural (MLP) vs Regressão Logística,150,81,6.613226227903784e-06
 Rede Neural (MLP) vs LightGBM (boosting de árvores),91,82,0.5431598394773475
 Rede Neural (MLP) vs SVM (kernel RBF),82,62,0.11303096428191342
 Rede Neural (MLP) vs Ensemble (votação suave),70,59,0.3786876626931184

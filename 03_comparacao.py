@@ -1,3 +1,10 @@
+"""Junta os resultados de todas as técnicas, cruza com as notas do Kaggle e gera tabela e figuras.
+
+Lê resultados/resultados.csv (02) e, se existir, resultados/resultados_extras.csv (02b),
+mais as pontuações preenchidas à mão em kaggle_scores.csv.
+"""
+import textwrap
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -7,6 +14,11 @@ import pandas as pd
 from src.preparacao import BASE, GRAFICOS, RESULTADOS
 
 res = pd.read_csv(RESULTADOS / "resultados.csv")
+arq_extras = RESULTADOS / "resultados_extras.csv"
+if arq_extras.exists():  # tentativas extras: k-NN, MLP com limiar, stacking
+    res = pd.concat([res, pd.read_csv(arq_extras)], ignore_index=True)
+
+# Pontuações do Kaggle (preenchidas à mão depois de submeter)
 arq_kaggle = BASE / "kaggle_scores.csv"
 if arq_kaggle.exists():
     kag = pd.read_csv(arq_kaggle, dtype={"kaggle_publico": float, "kaggle_privado": float})
@@ -19,9 +31,13 @@ else:
 res["gap_treino_validacao"] = res.acc_treino - res.acc_validacao
 res["gap_validacao_kaggle"] = res.acc_validacao - res.kaggle_publico
 
+
 def fmt(v, casas=4):
+    """Número com vírgula decimal; '—' quando não há valor."""
     return "—" if pd.isna(v) else f"{v:.{casas}f}".replace(".", ",")
 
+
+# ---------------------------------------------------------------- tabela comparativa
 linhas = ["| Técnica | Treino | CV (média ± dp) | Validação | IC 95% val. | AUC val. | "
           "Kaggle público | Ajuste (s) |",
           "|:-----------------|-------:|-------------:|-------:|-----------:|------:|"
@@ -37,13 +53,14 @@ tabela = "\n".join(linhas)
 res.to_csv(RESULTADOS / "comparacao_completa.csv", index=False)
 print(tabela)
 
+# ---------------------------------------------------------------- Fig. 20: barras por técnica
 series = [("acc_treino", "Treino", "#9ecae1"), ("acc_cv_media", "CV (5 dobras)", "#4292c6"),
           ("acc_validacao", "Validação", "#08519c"), ("kaggle_publico", "Kaggle público", "#e6550d")]
 tem_kaggle = res.kaggle_publico.notna().any()
 if not tem_kaggle:
     series = series[:3]
 x = np.arange(len(res)); w = 0.8 / len(series)
-fig, ax = plt.subplots(figsize=(12, 5))
+fig, ax = plt.subplots(figsize=(max(12, 1.5 * len(res)), 5))
 for i, (col, rot, cor) in enumerate(series):
     vals = res[col].values
     barras = ax.bar(x + (i - (len(series) - 1) / 2) * w, vals, w, label=rot, color=cor)
@@ -51,18 +68,20 @@ for i, (col, rot, cor) in enumerate(series):
         if not np.isnan(v):
             ax.text(b.get_x() + b.get_width() / 2, v + 0.004, f"{v:.3f}", ha="center",
                     va="bottom", fontsize=7, rotation=90)
+# Barras de erro (IC 95%) sobre a barra de validação
 ax.errorbar(x + (2 - (len(series) - 1) / 2) * w, res.acc_validacao,
             yerr=[res.acc_validacao - res.ic95_inf, res.ic95_sup - res.acc_validacao],
             fmt="none", ecolor="k", capsize=3, lw=1)
-ax.set_xticks(x); ax.set_xticklabels([t.replace(" (", "\n(") for t in res.tecnica], fontsize=9)
+ax.set_xticks(x); ax.set_xticklabels([textwrap.fill(t, 16) for t in res.tecnica], fontsize=8.5)  # nomes longos em várias linhas
 ax.set_ylabel("Acurácia (maior é melhor)"); ax.set_ylim(0.45, 0.95)
-ax.axhline(res.acc_validacao.iloc[0], c="gray", ls=":", lw=1)
+ax.axhline(res.acc_validacao.iloc[0], c="gray", ls=":", lw=1)  # baseline
 ax.set_title("Acurácia por técnica: treino, validação cruzada, validação"
              + (" e Kaggle (público)" if tem_kaggle else "")
              + "\n(barras de erro: IC 95% bootstrap da validação; pontilhado: baseline)")
 ax.legend(loc="upper right", ncol=len(series), fontsize=9)
 fig.tight_layout(); fig.savefig(GRAFICOS / "20_comparacao.png", dpi=150); plt.close(fig)
 
+# ---------------------------------------------------------------- Fig. 21: desempenho x custo
 fig, ax = plt.subplots(figsize=(7, 4.5))
 m = res[~res.tecnica.str.startswith("Baseline")]
 ax.scatter(m.tempo_ajuste_final_s, m.acc_validacao, s=60, color="#08519c")

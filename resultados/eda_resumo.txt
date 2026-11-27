@@ -109,3 +109,16 @@ CabineNum      -0.045
 VIP            -0.038
 TamGrupo        0.083
 CryoSleep       0.469
+
+Sobrenomes distintos (treino + teste): 2406
+Passageiros do treino cujo sobrenome aparece em 2+ grupos de viagem: 93.8%
+Correlação entre TamFamilia e TamGrupo: 0.25
+
+Taxa por tamanho da família (nº de pessoas com o mesmo sobrenome):
+             mean  size
+TamFamilia             
+(0, 1]      0.624   133
+(1, 2]      0.536   425
+(2, 3]      0.554   616
+(3, 5]      0.530  1784
+(5, 100]    0.484  5535

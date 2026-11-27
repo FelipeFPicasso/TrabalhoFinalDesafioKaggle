@@ -1,5 +1,18 @@
+# %% [markdown]
+# # Spaceship Titanic — Análise exploratória (EDA)
+#
+# Este arquivo funciona como script (`python 01_eda.py`) e como notebook
+# (`01_eda.ipynb`, gerado a partir dele). Cada achado abaixo justifica uma decisão de
+# preparação dos dados feita em `src/preparacao.py`.
+# O notebook precisa ser aberto a partir da pasta do projeto (onde fica a pasta `src/`).
+
+# %%
+import sys
+
 import matplotlib
-matplotlib.use("Agg")
+EM_NOTEBOOK = "ipykernel" in sys.modules
+if not EM_NOTEBOOK:
+    matplotlib.use("Agg")  # no script as figuras só vão para arquivo
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -9,18 +22,39 @@ from src.preparacao import ALVO, GASTOS, GRAFICOS, RESULTADOS, carregar_dados
 
 sns.set_theme(style="whitegrid", context="notebook")
 treino, teste = carregar_dados()
-linhas = []
+linhas = []  # tudo o que passa por log() também vai para resultados/eda_resumo.txt
+
 
 def log(texto=""):
     print(texto)
     linhas.append(str(texto))
 
+
+def salvar(fig, nome):
+    """Salva a figura em graficos/ (e mostra no notebook)."""
+    fig.tight_layout()
+    fig.savefig(GRAFICOS / nome, dpi=150)
+    if EM_NOTEBOOK:
+        plt.show()
+    plt.close(fig)
+
+
+# %% [markdown]
+# ## 1. Visão geral: tamanho, tipos e duplicatas
+
+# %%
 log(f"Treino: {treino.shape[0]} linhas x {treino.shape[1]} colunas")
 log(f"Teste:  {teste.shape[0]} linhas x {teste.shape[1]} colunas")
 log("\nTipos:\n" + treino.dtypes.to_string())
 log("\nDescrição numérica:\n" + treino.describe().T.round(2).to_string())
 log(f"\nLinhas duplicadas (sem PassengerId): {treino.drop(columns='PassengerId').duplicated().sum()}")
 
+# %% [markdown]
+# ## 2. Alvo: as classes estão balanceadas?
+# Se estiverem, a acurácia é uma métrica adequada e o baseline da classe majoritária
+# fica perto de 50%.
+
+# %%
 taxa = treino[ALVO].mean()
 log(f"\nAlvo Transported: {treino[ALVO].sum()} True / {(~treino[ALVO]).sum()} False "
     f"-> {taxa:.4f} de positivos (classes balanceadas)")
@@ -33,8 +67,14 @@ for i, v in enumerate(cont.values):
 ax.set_ylabel("Passageiros")
 ax.set_title("Distribuição do alvo (Transported)")
 ax.set_ylim(0, cont.max() * 1.15)
-fig.tight_layout(); fig.savefig(GRAFICOS / "01_alvo.png", dpi=150); plt.close(fig)
+salvar(fig, "01_alvo.png")
 
+# %% [markdown]
+# ## 3. Valores ausentes
+# Poucos por coluna, mas em muitas linhas: não dá para descartar linhas, então a
+# estratégia é imputar (regras do domínio + imputação dentro do Pipeline).
+
+# %%
 aus = pd.DataFrame({
     "treino_%": treino.drop(columns=ALVO).isna().mean() * 100,
     "teste_%": teste.isna().mean() * 100,
@@ -48,8 +88,10 @@ fig, ax = plt.subplots(figsize=(7, 4))
 aus.drop(index="PassengerId").plot.barh(ax=ax, color=["#2a6fbb", "#e08a2c"])
 ax.set_xlabel("% de valores ausentes")
 ax.set_title("Valores ausentes por coluna")
-fig.tight_layout(); fig.savefig(GRAFICOS / "02_ausentes.png", dpi=150); plt.close(fig)
+salvar(fig, "02_ausentes.png")
 
+# %%
+# Atributos auxiliares só para a exploração (a preparação de verdade está em src/preparacao.py)
 d = treino.copy()
 d["Grupo"] = d.PassengerId.str[:4]
 d["TamGrupo"] = d.groupby("Grupo").PassengerId.transform("count")
@@ -57,6 +99,11 @@ cab = d.Cabin.str.split("/", expand=True)
 d["Deck"], d["CabineNum"], d["Side"] = cab[0], pd.to_numeric(cab[1]), cab[2]
 d["GastoTotal"] = d[GASTOS].sum(axis=1, min_count=1)
 
+# %% [markdown]
+# ## 4. Variáveis categóricas x alvo
+# CryoSleep e HomePlanet são as que mais separam as classes.
+
+# %%
 log("\nTaxa de Transported por categoria:")
 cats = ["HomePlanet", "CryoSleep", "Destination", "VIP", "Deck", "Side"]
 fig, axes = plt.subplots(2, 3, figsize=(13, 7))
@@ -70,8 +117,12 @@ for ax, c in zip(axes.ravel(), cats):
     ax.set_ylim(0, 1.05); ax.set_title(c); ax.set_ylabel("Taxa de Transported")
     ax.tick_params(axis="x", rotation=20)
 fig.suptitle("Taxa de transportados por categoria (tracejado: taxa geral)")
-fig.tight_layout(); fig.savefig(GRAFICOS / "03_categoricas_vs_alvo.png", dpi=150); plt.close(fig)
+salvar(fig, "03_categoricas_vs_alvo.png")
 
+# %% [markdown]
+# ## 5. Idade
+
+# %%
 fig, axes = plt.subplots(1, 2, figsize=(12, 4))
 sns.histplot(d, x="Age", hue=ALVO, bins=40, multiple="layer", ax=axes[0])
 axes[0].set_title("Idade por classe")
@@ -80,9 +131,16 @@ tab = d.groupby(faixa, observed=True)[ALVO].agg(["mean", "size"])
 axes[1].bar(tab.index.astype(str), tab["mean"], color="#2a6fbb")
 axes[1].axhline(taxa, ls="--", c="k", lw=1)
 axes[1].set_ylabel("Taxa de Transported"); axes[1].set_title("Taxa por faixa etária")
-fig.tight_layout(); fig.savefig(GRAFICOS / "04_idade.png", dpi=150); plt.close(fig)
+salvar(fig, "04_idade.png")
 log("\nTaxa por faixa etária:\n" + tab.round(3).to_string())
 
+# %% [markdown]
+# ## 6. Gastos a bordo
+# Muitos zeros e distribuição muito assimétrica: usamos `log1p` e um indicador de
+# "não gastou nada". Quem está em CryoSleep (ou é criança) não gasta, o que permite
+# imputar os gastos ausentes com 0.
+
+# %%
 log("\nGastos: % de zeros, assimetria e média por classe")
 for g in GASTOS + ["GastoTotal"]:
     s = d[g].dropna()
@@ -94,8 +152,9 @@ for ax, g in zip(axes.ravel(), GASTOS + ["GastoTotal"]):
     sns.histplot(d.assign(v=np.log1p(d[g])), x="v", hue=ALVO, bins=30, ax=ax, element="step")
     ax.set_xlabel(f"log(1 + {g})"); ax.set_title(g)
 fig.suptitle("Gastos a bordo (escala log1p) por classe")
-fig.tight_layout(); fig.savefig(GRAFICOS / "05_gastos.png", dpi=150); plt.close(fig)
+salvar(fig, "05_gastos.png")
 
+# %%
 sem_gasto = d.GastoTotal == 0
 log(f"Taxa de Transported com gasto total = 0: {d.loc[sem_gasto, ALVO].mean():.3f}; "
     f"com gasto > 0: {d.loc[d.GastoTotal > 0, ALVO].mean():.3f}")
@@ -105,6 +164,13 @@ log(f"\nSoma dos gastos dos passageiros em CryoSleep: {d.loc[cryo, GASTOS].sum()
 log(f"Soma dos gastos de menores de 13 anos: {d.loc[d.Age < 13, GASTOS].sum().sum():.0f}")
 log(f"CryoSleep ausente e gasto > 0: {(d.CryoSleep.isna() & (d.GastoTotal > 0)).sum()} linhas")
 
+# %% [markdown]
+# ## 7. Grupo de viagem e cabine
+# Quem viaja junto compartilha planeta e lado da cabine (permite completar ausentes pelo
+# grupo) e tende a ter o mesmo destino. Grupos nunca são divididos entre treino e teste,
+# por isso a validação precisa ser agrupada.
+
+# %%
 for c in ["HomePlanet", "Side", "Destination", "Deck"]:
     n = d.dropna(subset=[c]).groupby("Grupo")[c].nunique()
     log(f"Grupos com mais de um valor de {c}: {(n > 1).mean():.1%}")
@@ -126,8 +192,12 @@ tb.plot(ax=axes[1], marker="o")
 axes[1].axhline(taxa, ls="--", c="k", lw=1)
 axes[1].set_xlabel("Número da cabine (faixas de 100)"); axes[1].set_ylabel("Taxa de Transported")
 axes[1].set_title("Taxa por número e lado da cabine")
-fig.tight_layout(); fig.savefig(GRAFICOS / "06_grupo_cabine.png", dpi=150); plt.close(fig)
+salvar(fig, "06_grupo_cabine.png")
 
+# %% [markdown]
+# ## 8. Correlações
+
+# %%
 num = d[["Age", "TamGrupo", "CabineNum"]].copy()
 for g in GASTOS + ["GastoTotal"]:
     num[g] = np.log1p(d[g])
@@ -139,7 +209,43 @@ log("\nCorrelação com o alvo:\n" + corr[ALVO].drop(ALVO).sort_values().round(3
 fig, ax = plt.subplots(figsize=(9, 7))
 sns.heatmap(corr, annot=True, fmt=".2f", cmap="RdBu_r", center=0, ax=ax, annot_kws={"size": 7})
 ax.set_title("Correlação de Pearson (gastos em log1p)")
-fig.tight_layout(); fig.savefig(GRAFICOS / "07_correlacao.png", dpi=150); plt.close(fig)
+salvar(fig, "07_correlacao.png")
 
+# %% [markdown]
+# ## 9. Sobrenome (família)
+# O nome em si não serve como atributo, mas o sobrenome indica parentesco. A pergunta é se
+# famílias que aparecem em vários grupos de viagem trazem informação além do tamanho do
+# grupo. O atributo `TamFamilia` (nº de pessoas com o mesmo sobrenome, contado em treino +
+# teste juntos, sem usar o alvo) é testado na ablação (`02c_ablacao_familia.py`).
+
+# %%
+todos = pd.concat([treino[["PassengerId", "Name"]], teste[["PassengerId", "Name"]]]).dropna()
+todos["Grupo"] = todos.PassengerId.str[:4]
+todos["Sobrenome"] = todos.Name.str.split().str[-1]
+cont_sob = todos.Sobrenome.value_counts()                 # pessoas por sobrenome
+grupos_por_sob = todos.groupby("Sobrenome").Grupo.nunique()  # grupos por sobrenome
+
+d["Sobrenome"] = d.Name.str.split().str[-1]
+d["TamFamilia"] = d.Sobrenome.map(cont_sob)
+d["GruposDaFamilia"] = d.Sobrenome.map(grupos_por_sob)
+log(f"\nSobrenomes distintos (treino + teste): {len(cont_sob)}")
+log(f"Passageiros do treino cujo sobrenome aparece em 2+ grupos de viagem: "
+    f"{(d.GruposDaFamilia > 1).mean():.1%}")
+log(f"Correlação entre TamFamilia e TamGrupo: {d[['TamFamilia', 'TamGrupo']].corr().iloc[0, 1]:.2f}")
+tab = d.groupby(pd.cut(d.TamFamilia, [0, 1, 2, 3, 5, 100]), observed=True)[ALVO] \
+    .agg(["mean", "size"])
+log("\nTaxa por tamanho da família (nº de pessoas com o mesmo sobrenome):\n"
+    + tab.round(3).to_string())
+
+fig, ax = plt.subplots(figsize=(6.5, 4))
+ax.bar(tab.index.astype(str), tab["mean"], color="#2a6fbb")
+ax.axhline(taxa, ls="--", c="k", lw=1)
+for i, (m, n) in enumerate(tab.values):
+    ax.text(i, m + 0.01, f"n={int(n)}", ha="center", fontsize=8)
+ax.set_xlabel("Pessoas com o mesmo sobrenome"); ax.set_ylabel("Taxa de Transported")
+ax.set_title("Taxa de transportados por tamanho da família")
+salvar(fig, "08_familia.png")
+
+# %%
 (RESULTADOS / "eda_resumo.txt").write_text("\n".join(linhas), encoding="utf-8")
 print("\nEDA concluída.")
