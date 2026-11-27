@@ -44,7 +44,7 @@ para o Kaggle, as figuras, as tabelas comparativas e (à parte) o relatório.
    `./run_all.sh` de novo (ou só o `03_comparacao.py`) para a tabela e o gráfico incluírem o Kaggle.
 5. **Relatório** (fora do `run_all.sh`; precisa do LibreOffice, comando `soffice`):
    ```bash
-   .venv/bin/python 04_relatorio.py ML_Kaggle_Sobrenome1_Sobrenome2
+   .venv/bin/python 04_relatorio.py ML_Kaggle_Picasso_Reginato
    ```
    Monta `relatorio/relatorio.md` em `.docx` e `.pdf`, com a tabela comparativa mais recente.
 

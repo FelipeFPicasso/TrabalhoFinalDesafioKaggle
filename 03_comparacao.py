@@ -64,9 +64,10 @@ fig, ax = plt.subplots(figsize=(max(12, 1.5 * len(res)), 5))
 for i, (col, rot, cor) in enumerate(series):
     vals = res[col].values
     barras = ax.bar(x + (i - (len(series) - 1) / 2) * w, vals, w, label=rot, color=cor)
-    for b, v in zip(barras, vals):
+    topo = res.ic95_sup.values if col == "acc_validacao" else vals
+    for b, v, t in zip(barras, vals, topo):
         if not np.isnan(v):
-            ax.text(b.get_x() + b.get_width() / 2, v + 0.004, f"{v:.3f}", ha="center",
+            ax.text(b.get_x() + b.get_width() / 2, t + 0.004, f"{v:.3f}", ha="center",
                     va="bottom", fontsize=7, rotation=90)
 # Barras de erro (IC 95%) sobre a barra de validação
 ax.errorbar(x + (2 - (len(series) - 1) / 2) * w, res.acc_validacao,

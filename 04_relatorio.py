@@ -12,7 +12,7 @@ import pypandoc
 from src.preparacao import BASE, RESULTADOS
 
 # Nome dos arquivos de saída (padrão do enunciado: ML_Kaggle_Sobrenome1_Sobrenome2)
-nome = sys.argv[1] if len(sys.argv) > 1 else "ML_Kaggle_Picasso_Sobrenome2"
+nome = sys.argv[1] if len(sys.argv) > 1 else "ML_Kaggle_Picasso_Reginato"
 pasta = BASE / "relatorio"
 
 # Coloca a tabela comparativa (gerada pelo 03) no lugar do marcador do relatório
